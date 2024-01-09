@@ -101,25 +101,31 @@
 // export default Map;
 
 import React, { useEffect, useState } from "react";
-import {
-  GoogleMap,
-  Marker,
-  Polyline,
-} from "@react-google-maps/api";
+import { GoogleMap, Marker, Polyline } from "@react-google-maps/api";
 import { Spinner } from "@material-tailwind/react";
 import { useData } from "../../contexts/DataContexts";
-import MapRouteTabs from "../MapTabs/MapRouteTabs";
+import MapRouteTabs from "./MapRouteTabs";
+import { findRoutes } from "../../constants/toGetRouteInfo";
+import MarkerTooltip from "./MarkerTooltip";
+import RouteInfo from "./RouteInfo";
 
-const Map = ({ isLoaded,loadError}) => {
-  const {data,updateData} = useData()
+const Map = ({ isLoaded, loadError }) => {
+  const { data, updateData } = useData();
   const [map, setMap] = useState(/** @type google.maps.Map */ (null));
   const [currentLocation, setCurrentLocation] = useState(null);
   const [isLocating, setIsLocating] = useState(false);
-  const [polylines, setPolylines] = useState([]);
-  const [paths, setPaths] = useState([]);
+  const [path, setPath] = useState([]);
   const [orgin, setorgin] = useState(null);
-  const [destination, setdestination] = useState(null)
+  const [destination, setdestination] = useState(null);
+  const [cheapest, setcheapest] = useState(null);
+  const [fastest, setfastest] = useState(null);
+  const [others, setothers] = useState(null);
+  const [route, setroute] = useState("fastest");
+  const [currentRoute, setcurrentRoute] = useState(null);
+  const [isOpen, setIsOpen] = useState(false);
+  const [selectedToll, setSelectedToll] = useState(null);
 
+  // const [tolls, settolls] = useState(second)
 
   const handleLocateClick = () => {
     setIsLocating(!isLocating);
@@ -152,27 +158,48 @@ const Map = ({ isLoaded,loadError}) => {
     );
   };
 
-
   useEffect(() => {
     if (data.length !== 0) {
       console.log("data.fromCoord", data);
-      if (data.fromCoord ) {
+      if (data.fromCoord) {
         setorgin(() => data.fromCoord);
       }
-      if(data.toCoord) {
+      if (data.toCoord) {
         setdestination(() => data.toCoord);
       }
       if (data.routes) {
-        const newPolylines = data.routes.map((route) => route.polyline);
-        const newPaths = newPolylines.map((polyline) =>
-          decodePolyline(polyline)
-        );
-
-        setPolylines(newPolylines);
-        setPaths(newPaths);
+        const routeInfo = findRoutes(data.routes);
+        console.log("result of to getrouteIndfo function : ", routeInfo);
+        if (routeInfo !== null) {
+          setcheapest(() => routeInfo.cheapest);
+          setfastest(() => routeInfo.fastest);
+          setothers(() => routeInfo.others);
+        }
       }
     }
   }, [data]);
+
+  useEffect(() => {
+    if (fastest && cheapest && others) {
+      if (route === "fastest") {
+        setcurrentRoute(fastest);
+      }
+      if (route === "cheapest") {
+        setcurrentRoute(cheapest);
+      }
+      if (route === "others") {
+        setcurrentRoute(others);
+      }
+    }
+  }, [fastest, cheapest, others, route]);
+
+  useEffect(() => {
+    setPath([]);
+    if (currentRoute && currentRoute.polyline) {
+      const newPaths = decodePolyline(currentRoute.polyline);
+      setPath(newPaths);
+    }
+  }, [currentRoute]);
 
   useEffect(() => {
     const animateToCoordinate = (coordinate, zoomLevel = 15) => {
@@ -205,7 +232,6 @@ const Map = ({ isLoaded,loadError}) => {
     }
   }, [map, orgin, destination]);
 
-
   const decodePolyline = (polyline) => {
     if (
       window.google &&
@@ -219,19 +245,31 @@ const Map = ({ isLoaded,loadError}) => {
   };
 
   return isLoaded ? (
-    <div className="relative w-full h-screen flex flex-col">
+    <div className="relative w-full h-full flex flex-col">
       <div className="mb-2">
-          <MapRouteTabs/>
+        {currentRoute && (<MapRouteTabs setroute={setroute} currentRoute={currentRoute} />)}
       </div>
       <GoogleMap
         center={currentLocation || { lat: 8.5241, lng: 76.9366 }}
         zoom={15}
-        mapContainerStyle={{ width: "100%", height: "70%" }}
+        mapContainerStyle={{ width: "100%", height: "28em" }}
         options={{
           zoomControl: false,
           mapTypeControl: false,
           fullscreenControl: false,
           streetViewControl: false,
+        }}
+        onClick={() => {
+          setSelectedToll(null);
+          if (map && orgin && destination) {
+            const bounds = new window.google.maps.LatLngBounds();
+            bounds.extend(orgin);
+            bounds.extend(destination);
+            setTimeout(() => {
+              map.fitBounds(bounds);
+              map.setZoom(7); // Adjust the zoom level as needed
+            }, 600);
+          }
         }}
         onLoad={(map) => setMap(map)}
       >
@@ -248,30 +286,50 @@ const Map = ({ isLoaded,loadError}) => {
         >
           {isLocating ? "Locating..." : "📍"}
         </div>
-        {paths.map(
-        (path, index) =>
-          path.length > 0 && (
-            <Polyline
-              key={index}
-              path={path}
-              options={{
-                strokeColor:
-                  index === 1
-                    ? "rgba(0, 0, 255, 0.5)"
-                    : index === 2
-                    ? "green"
-                    : "rgba(0, 0, 255, 0.5)",
-                strokeOpacity: 2.0,
-                strokeWeight: 3,
+
+        {path.length > 0 && (
+          <Polyline
+            path={path}
+            options={{
+              strokeColor:
+                route === "fastest"
+                  ? "rgba(0, 0, 255)"
+                  : route === "cheapest"
+                  ? "green"
+                  : route === "others"
+                  ? "rgba(0, 150, 255)"
+                  : "",
+              strokeOpacity: 1.0,
+              strokeWeight: 5,
+            }}
+          />
+        )}
+        {isLoaded && map && orgin && <Marker position={orgin} />}
+        {isLoaded && map && destination && <Marker position={destination} />}
+        {currentRoute &&
+          currentRoute.tolls.map((toll, index) => (
+            <Marker
+              position={{
+                lat: Number(toll.lat),
+                lng: Number(toll.lng),
               }}
+              onClick={() => {setSelectedToll(toll)}}
+              key={`${toll.id + index}`}
             />
-          )
-      )}
-      {isLoaded && map && orgin && <Marker position={orgin} />}
-      {isLoaded && map && destination && <Marker position={destination} />}
+          ))}
+
+        {selectedToll && (
+          <MarkerTooltip
+            toll={selectedToll}
+            onCloseClick={() => setSelectedToll(null)}
+          />
+        )}
       </GoogleMap>
+      <div className="rounded-xl mt-2">
+      {currentRoute &&(<RouteInfo currentRoute={currentRoute}/>)}
+      </div>
     </div>
-  ):(
+  ) : (
     <div className="flex justify-center w-full h-[70%] items-center">
       <Spinner />
     </div>
@@ -279,92 +337,3 @@ const Map = ({ isLoaded,loadError}) => {
 };
 
 export default Map;
-
-// import React, { useState, useEffect } from "react";
-// import {
-//   GoogleMap,
-//   Marker,
-//   Polyline,
-//   useJsApiLoader,
-// } from "@react-google-maps/api";
-// import { useData } from "../../contexts/DataContexts";
-
-// const Map = ({ isLoaded, loadError }) => {
-//   const { data } = useData();
-//   const [polylines, setPolylines] = useState([]);
-//   const [paths, setPaths] = useState([]);
-//   const [orgin, setorgin] = useState(null);
-//   const [map, setMap] = useState(/** @type google.maps.Map */ (null));
-
-//   useEffect(() => {
-//     if (data.length !== 0) {
-//       console.log("data.fromCoord", data);
-//       if (data.fromCoord) {
-//         setorgin(() => data.fromCoord);
-//       }
-//       if (data.routes) {
-//         const newPolylines = data.routes.map((route) => route.polyline);
-//         const newPaths = newPolylines.map((polyline) =>
-//           decodePolyline(polyline)
-//         );
-
-//         setPolylines(newPolylines);
-//         setPaths(newPaths);
-//       }
-//     }
-//   }, [data]);
-
-//   const decodePolyline = (polyline) => {
-//     if (
-//       window.google &&
-//       window.google.maps &&
-//       window.google.maps.geometry &&
-//       window.google.maps.geometry.encoding
-//     ) {
-//       return window.google.maps.geometry.encoding.decodePath(polyline);
-//     }
-//     return [];
-//   };
-
-//   if (loadError) {
-//     return <div>Error loading Google Maps API</div>;
-//   }
-//   // const [marker, setMarker] = useState(null);
-//   // const handleMarkerLoad = (marker) => {
-//   //   // Marker has been loaded, you can access the marker instance here
-//   //   console.log("Marker Loaded:", marker);
-//   //   setMarker(marker);
-//   // };
-
-//   return isLoaded ? (
-//     <GoogleMap
-//       center={{ lat: 8.5241, lng: 76.9366 }}
-//       zoom={15}
-//       mapContainerStyle={{ width: "100%", height: "100vh" }}
-//       onLoad={(map) => setMap(map)}
-//     >
-//       {isLoaded && map && orgin && <Marker position={orgin} />}
-//       {paths.map(
-//         (path, index) =>
-//           path.length > 0 && (
-//             <Polyline
-//               key={index}
-//               path={path}
-//               options={{
-//                 strokeColor:
-//                   index === 1
-//                     ? "rgba(0, 0, 255, 0.5)"
-//                     : index === 2
-//                     ? "green"
-//                     : "rgba(0, 0, 255, 0.5)",
-//                 strokeOpacity: 2.0,
-//                 strokeWeight: 3,
-//               }}
-//             />
-//           )
-//       )}
-//     </GoogleMap>
-//   ) : null;
-// };
-
-// export default Map;
