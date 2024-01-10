@@ -115,7 +115,7 @@ import { useData } from "../../contexts/DataContexts";
 const Form = ({ isLoaded }) => {
 
 
-  const {data,updateData} = useData()
+  const {data,updateData,removeData} = useData()
 
   const [fuelOpen, setFuelOpen] = useState(false);
 
@@ -190,6 +190,14 @@ const Form = ({ isLoaded }) => {
     }
   };
 
+  // const handleLocChange =(value)=>{
+  //   if(value = 'from' && data.from){
+  //     removeData()
+  //   }else if(value = 'to' && data.to){
+  //     removeData()
+  //   }
+  // }
+
   if (!isLoaded) {
     return <div>Loading...</div>;
   } else {
@@ -212,6 +220,7 @@ const Form = ({ isLoaded }) => {
               <input
                 placeholder="Origin"
                 className=" border-2 border-gray-500 w-80 p-2 rounded-xl focus:border-t-gray-900"
+                // onChange={()=>handleLocChange("from")}
               />
             </Autocomplete>
 
@@ -224,6 +233,7 @@ const Form = ({ isLoaded }) => {
               <input
                 placeholder="Destination"
                 className=" border-2 border-gray-500 w-80 p-2 rounded-xl focus:border-t-gray-900"
+                // onChange={()=>handleLocChange("to")}
               />
             </Autocomplete>
 

@@ -13,8 +13,12 @@ export const DataProvider = ({ children }) => {
     setData(newData);
   };
 
+  const removeData = ()=>{
+    setData([])
+  }
+
   return (
-    <DataContext.Provider value={{ data, updateData }}>
+    <DataContext.Provider value={{ data, updateData ,removeData }}>
       {children}
     </DataContext.Provider>
   );

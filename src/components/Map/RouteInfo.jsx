@@ -34,7 +34,7 @@ const RouteInfo = ({ currentRoute }) => {
               >
                 {currentRoute.costs.tag === 0
                   ? "No Tolls"
-                  : Math.ceil(currentRoute.costs.tag)}
+                  : "₹" + Math.ceil(currentRoute.costs.tag)}
               </Typography>
             </td>
             <td>
@@ -43,7 +43,7 @@ const RouteInfo = ({ currentRoute }) => {
                 color="blue-gray"
                 className="font-normal"
               >
-                {Math.ceil(currentRoute.costs.fuel)}
+                ₹ {Math.ceil(currentRoute.costs.fuel)}
               </Typography>
             </td>
             <td>
@@ -52,7 +52,7 @@ const RouteInfo = ({ currentRoute }) => {
                 color="blue-gray"
                 className="font-normal"
               >
-                {currentRoute.costs.tag !== 0
+                ₹ {currentRoute.costs.tag !== 0
                   ? Math.ceil(currentRoute.costs.tag + currentRoute.costs.fuel)
                   : Math.ceil(currentRoute.costs.fuel)}
               </Typography>

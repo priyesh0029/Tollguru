@@ -15,8 +15,8 @@ const Home = () => {
     region: "IN",
   });
     return (
-      <div className="flex flex-row p-24 h-full w-full justify-center gap-16">
-        <div className="flex ">
+      <div className="flex flex-col md:flex-row p-24 h-full w-full justify-center gap-16">
+        <div className="flex">
           <Form isLoaded={isLoaded}/>
         </div>
         <div className="flex w-full h-full">

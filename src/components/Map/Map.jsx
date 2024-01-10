@@ -197,7 +197,7 @@ const Map = ({ isLoaded, loadError }) => {
     setPath([]);
     if (currentRoute && currentRoute.polyline) {
       const newPaths = decodePolyline(currentRoute.polyline);
-      setPath(newPaths);
+      setPath((prev)=>newPaths);
     }
   }, [currentRoute]);
 
@@ -244,15 +244,27 @@ const Map = ({ isLoaded, loadError }) => {
     return [];
   };
 
+  const mapTosetBounds = () => {
+    const bounds = new window.google.maps.LatLngBounds();
+    bounds.extend(orgin);
+    bounds.extend(destination);
+    setTimeout(() => {
+      map.fitBounds(bounds);
+      map.setZoom(7); // Adjust the zoom level as needed
+    }, 600);
+  };
+
   return isLoaded ? (
-    <div className="relative w-full h-full flex flex-col">
+    <div className=" w-full h-full flex flex-col">
       <div className="mb-2">
-        {currentRoute && (<MapRouteTabs setroute={setroute} currentRoute={currentRoute} />)}
+        {currentRoute && (
+          <MapRouteTabs setroute={setroute} currentRoute={currentRoute} />
+        )}
       </div>
       <GoogleMap
         center={currentLocation || { lat: 8.5241, lng: 76.9366 }}
         zoom={15}
-        mapContainerStyle={{ width: "100%", height: "28em" }}
+        mapContainerStyle={{ width: "100%", height: "30em" }}
         options={{
           zoomControl: false,
           mapTypeControl: false,
@@ -262,13 +274,7 @@ const Map = ({ isLoaded, loadError }) => {
         onClick={() => {
           setSelectedToll(null);
           if (map && orgin && destination) {
-            const bounds = new window.google.maps.LatLngBounds();
-            bounds.extend(orgin);
-            bounds.extend(destination);
-            setTimeout(() => {
-              map.fitBounds(bounds);
-              map.setZoom(7); // Adjust the zoom level as needed
-            }, 600);
+            mapTosetBounds();
           }
         }}
         onLoad={(map) => setMap(map)}
@@ -288,22 +294,29 @@ const Map = ({ isLoaded, loadError }) => {
         </div>
 
         {path.length > 0 && (
-          <Polyline
-            path={path}
-            options={{
-              strokeColor:
-                route === "fastest"
-                  ? "rgba(0, 0, 255)"
-                  : route === "cheapest"
-                  ? "green"
-                  : route === "others"
-                  ? "rgba(0, 150, 255)"
-                  : "",
-              strokeOpacity: 1.0,
-              strokeWeight: 5,
-            }}
-          />
+          <>
+            {path.length > 0 && (
+              <Polyline
+                path={path}
+                options={{
+                  strokeColor:
+                    route === "fastest"
+                      ? "rgba(0, 0, 255)"
+                      : route === "cheapest"
+                      ? "green"
+                      : route === "others"
+                      ? "rgba(0, 150, 255)"
+                      : "",
+                  strokeOpacity: 1.0,
+                  strokeWeight: 5,
+                }}
+              />
+            )}
+
+            {path.length > 0 && mapTosetBounds()}
+          </>
         )}
+
         {isLoaded && map && orgin && <Marker position={orgin} />}
         {isLoaded && map && destination && <Marker position={destination} />}
         {currentRoute &&
@@ -313,20 +326,22 @@ const Map = ({ isLoaded, loadError }) => {
                 lat: Number(toll.lat),
                 lng: Number(toll.lng),
               }}
-              onClick={() => {setSelectedToll(toll)}}
+              onClick={() => {
+                setSelectedToll(toll);
+              }}
               key={`${toll.id + index}`}
             />
           ))}
 
-        {selectedToll && (
+        {selectedToll ? (
           <MarkerTooltip
             toll={selectedToll}
             onCloseClick={() => setSelectedToll(null)}
           />
-        )}
+        ) : null}
       </GoogleMap>
       <div className="rounded-xl mt-2">
-      {currentRoute &&(<RouteInfo currentRoute={currentRoute}/>)}
+        {currentRoute && <RouteInfo currentRoute={currentRoute} />}
       </div>
     </div>
   ) : (
