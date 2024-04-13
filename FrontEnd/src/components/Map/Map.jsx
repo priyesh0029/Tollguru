@@ -1,104 +1,3 @@
-// import React, { useEffect, useRef } from 'react';
-// import H from '@here/maps-api-for-javascript';
-
-// const Map = (props) => {
-//   const mapRef = useRef(null);
-//   const map = useRef(null);
-//   const platform = useRef(null);
-//   const { apikey } = props;
-
-//   useEffect(() => {
-//     if (!map.current) {
-//       platform.current = new H.service.Platform({ apikey });
-//       const rasterTileService = platform.current.getRasterTileService({
-//         queryParams: {
-//           style: "explore.day",
-//           lang: "en",
-//           size: 512,
-//         },
-//       });
-//       const rasterTileProvider = new H.service.rasterTile.Provider(rasterTileService);
-//       const rasterTileLayer = new H.map.layer.TileLayer(rasterTileProvider);
-//       const newMap = new H.Map(mapRef.current, rasterTileLayer, {
-//         pixelRatio: window.devicePixelRatio,
-//         center: {
-//           lat: 64.144,
-//           lng: -21.94,
-//         },
-//         zoom: 14,
-//       });
-
-//       const behavior = new H.mapevents.Behavior(new H.mapevents.MapEvents(newMap));
-//       map.current = newMap;
-//     }
-//   }, [apikey]);
-
-//   // Apply inline styles to the map container
-//   const mapContainerStyle = {
-//     width: '62vw',
-//     height: '80vh',
-//     paddingLeft : "2em",
-//     paddingRight : "2em"
-//   };
-
-//   return <div style={mapContainerStyle} ref={mapRef} />;
-// };
-
-// export default Map;
-
-// import React, { useEffect, useState } from "react";
-// import { useJsApiLoader, GoogleMap, Marker } from "@react-google-maps/api";
-// import { Spinner } from "@material-tailwind/react";
-
-// const Map = () => {
-//   const [currentLocation, setCurrentLocation] = useState(null);
-//   const { isLoaded } = useJsApiLoader({
-//     googleMapsApiKey: "AIzaSyAUvxpccyeJPcbvNuo5r-C6Pyi_ewcqKkQ",
-//   });
-
-//   useEffect(() => {
-//     if (isLoaded) {
-//       // Use browser's Geolocation API to get the current position
-//       navigator.geolocation.getCurrentPosition(
-//         (position) => {
-//           const { latitude, longitude } = position.coords;
-//           setCurrentLocation({ lat: latitude, lng: longitude });
-//         },
-//         (error) => {
-//           console.error("Error getting location:", error.message);
-//         }
-//       );
-//     }
-//   }, [isLoaded]);
-
-//   if (!isLoaded) {
-//     return (
-//       <div className="flex justify-center w-full h-[70%] items-center">
-//         <Spinner />
-//       </div>
-//     );
-//   }
-
-//   return (
-//     <div className="flex w-[100%] h-screen">
-//       <GoogleMap
-//         center={currentLocation || { lat: 8.5241, lng: 76.9366 }}
-//         zoom={15}
-//         mapContainerStyle={{ width: "100%", height: "70%" }}
-//         options={{
-//           zoomControl: false,
-//           mapTypeControl: false,
-//           fullscreenControl: false,
-//           streetViewControl: false,
-//         }}
-//       >
-//         {currentLocation && <Marker position={currentLocation} />}
-//       </GoogleMap>
-//     </div>
-//   );
-// };
-
-// export default Map;
 
 import React, { useEffect, useState } from "react";
 import { GoogleMap, Marker, Polyline } from "@react-google-maps/api";
@@ -125,7 +24,7 @@ const Map = ({ isLoaded, loadError }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedToll, setSelectedToll] = useState(null);
 
-  // const [tolls, settolls] = useState(second)
+ 
 
   const handleLocateClick = () => {
     setIsLocating(!isLocating);
