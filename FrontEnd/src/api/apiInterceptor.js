@@ -8,7 +8,7 @@ const baseURL = axios.create({
 baseURL.interceptors.request.use(
   (config) => {
     console.log("Entered to interceptor");
-      config.headers["x-api-key"] = `nDRd7b9MT7PQ69bNBFJL4PJttHMHHm66`
+      config.headers["x-api-key"] = process.env.TOLLGURU_APIKEY
 
     return config;
   },

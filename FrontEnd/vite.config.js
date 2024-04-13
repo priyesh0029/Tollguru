@@ -15,7 +15,9 @@ export default defineConfig({
   },
   define: {
     'process.env.REACT_GOOGLEMAPS_APIkEY': JSON.stringify(process.env.REACT_GOOGLEMAPS_APIkEY),
-    'process.env.TOLLGURU_BASE_URL' : JSON.stringify(process.env.TOLLGURU_BASE_URL)
+    'process.env.TOLLGURU_BASE_URL' : JSON.stringify(process.env.TOLLGURU_BASE_URL),
+    'process.env.TOLLGURU_APIKEY' : JSON.stringify(process.env.TOLLGURU_APIKEY)
+
   },
 })
 
